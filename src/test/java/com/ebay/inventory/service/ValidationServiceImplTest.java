@@ -21,30 +21,39 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.ebay.item.validation.cache.CacheStore;
 import com.ebay.item.validation.item.Item;
+import com.ebay.item.validation.item.error.ErrorCode;
 import com.ebay.item.validation.item.rules.ItemSpecsRule;
 import com.ebay.item.validation.item.rules.ItemTitleRule;
 import com.ebay.item.validation.item.rules.Rule;
-import com.ebay.item.validation.service.ItemSpecsNormalizerImpl;
+import com.ebay.item.validation.service.ItemSpecsNormalizer;
+import com.ebay.item.validation.service.RulesService;
+import com.ebay.item.validation.service.ValidationServiceImpl;
 
 
 
 @RunWith(SpringRunner.class)
-public class ItemSpecsNormalizerImplTest {
+public class ValidationServiceImplTest {
 	
 	private static final List<Rule> RULES = List.of(ItemTitleRule.getInsance(),ItemSpecsRule.getInsance());
-	private static final List<String> ITEM_SPECS = List.of("Abc", "Def");
+	private static final List<String> ITEM_SPECS = List.of("abc");
 	
-	static ItemSpecsNormalizerImpl service = null;
+	static ValidationServiceImpl service = null;
 	
-	static CacheStore<List<String>> itemSpecsCacheMock;
+	static RulesService rulesSeviceMock;
+	static CacheStore<List<Rule>> rulesCacheMock;
+	static ItemSpecsNormalizer itemSpecsCapitalizerMock;
 	
 
 	
 	@BeforeClass
     public static void setupMocks() {
-		service = new ItemSpecsNormalizerImpl();
-		itemSpecsCacheMock = createMock(CacheStore.class);
-		ReflectionTestUtils.setField(service,"itemSpecsCache",itemSpecsCacheMock);
+		service = new ValidationServiceImpl();
+		rulesSeviceMock = createMock(RulesService.class);
+		ReflectionTestUtils.setField(service,"rulesSevice",rulesSeviceMock);
+		rulesCacheMock = createMock(CacheStore.class);
+		ReflectionTestUtils.setField(service,"rulesCache",rulesCacheMock);
+		itemSpecsCapitalizerMock = createMock(ItemSpecsNormalizer.class);
+		ReflectionTestUtils.setField(service,"itemSpecsCapitalizer",itemSpecsCapitalizerMock);
 	}
 	
     @Before
@@ -54,38 +63,29 @@ public class ItemSpecsNormalizerImplTest {
     
     @After
     public void resetMocks() {
-        EasyMock.reset(itemSpecsCacheMock);
+        EasyMock.reset(rulesSeviceMock);
+        EasyMock.reset(rulesCacheMock);
+        EasyMock.reset(itemSpecsCapitalizerMock);
     }
 
 	@Test
-	public void testNormalizeItemSpecsWhenNoneInCache(){
-		expect(itemSpecsCacheMock.get(anyString())).andReturn(List.of()).once();
-		itemSpecsCacheMock.add(anyString(),anyObject(List.class));
-    	replay(itemSpecsCacheMock);
+	public void testValidateItem(){
+		expect(rulesCacheMock.get(anyString())).andReturn(RULES).once();
+    	replay(rulesCacheMock);
+    	expect(itemSpecsCapitalizerMock.normalizeItemSpecs(anyObject(Item.class))).andReturn(ITEM_SPECS).once();
+    	replay(itemSpecsCapitalizerMock);
     	
-		List<String> specs = service.normalizeItemSpecs(createTestItem());
-		Assert.assertTrue(specs.stream().allMatch(spec ->{
-			Character first = spec.charAt(0);
-			return Character.isUpperCase(first);
-		}));
+		List<ErrorCode> errors = service.validateItem(createTestItem());
+		System.out.println("###...errors="+errors);
+		Assert.assertEquals(3,errors.size());
 	}
-	@Test
-	public void testNormalizeItemSpecsWhenSomeInCache(){
-		expect(itemSpecsCacheMock.get(anyString())).andReturn(ITEM_SPECS).once();
-    	replay(itemSpecsCacheMock);
-    	
-		List<String> specs = service.normalizeItemSpecs(createTestItem());
-		Assert.assertTrue(specs.stream().allMatch(spec ->{
-			Character first = spec.charAt(0);
-			return Character.isUpperCase(first);
-		}));
-	}
+	
 	private Item createTestItem() {
 		Item item = Item.builder().siteId("1").categoryId("10")
 				.title("Title 1Title 1Title Title 1Title 11Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1Title 1").condition("good")
 				.price("20.25").quantity("5")
 				.imageUrls(List.of("url1","url2"))
-				.itemSpecifics(List.of("spec 1","spec 2"))
+				.itemSpecifics(List.of("Spec 1"))
 				.description("Description 1").build();
 		return item;
 	}
