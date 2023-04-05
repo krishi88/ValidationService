@@ -11,7 +11,7 @@ import com.google.common.cache.CacheBuilder;
 public class CacheStoreImpl<T> implements CacheStore<T>{
 	
 	private final Cache<String, T> cache = CacheBuilder.newBuilder()
-												    .expireAfterWrite(120, TimeUnit.SECONDS)
+												    .expireAfterWrite(15, TimeUnit.SECONDS)
 												    .concurrencyLevel(Runtime.getRuntime().availableProcessors())
 												    .build();
 	

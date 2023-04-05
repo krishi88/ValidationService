@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CacheStoreSerializable<T> implements Serializable {
 	
+	private static final long serialVersionUID = 1L;
 	private Cache<String, T> cache;
 	
     public CacheStoreSerializable(int expiryDuration, TimeUnit timeUnit) {

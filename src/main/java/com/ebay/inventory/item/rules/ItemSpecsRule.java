@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import com.ebay.inventory.enums.ItemCondition;
 import com.ebay.inventory.item.Item;
 import com.ebay.inventory.item.error.ErrorCode;
 import com.ebay.inventory.service.ItemSpecsNormalizer;
@@ -16,10 +17,10 @@ public class ItemSpecsRule implements Rule, Serializable {
 	
 	private static final ItemSpecsRule INSTANCE = new ItemSpecsRule();
 	
-	private static final String MODEL_PATTERN_STRING = ".*[Mm]odel\\s*\\:\\s*.+$";
+	private static final String MODEL_PATTERN_STRING = ".*[Cc]olor\\s*\\=\\s*.+$";
 	private static final Pattern MODEL_PATTERN = Pattern.compile(MODEL_PATTERN_STRING);
 	private static final Predicate<String> MODEL_PREDICATE = MODEL_PATTERN.asPredicate();
-	private static final Predicate<Item> ITEM_PREDICATE = (item)-> (Long.parseLong(item.getSiteId()) > 0l && Long.parseLong(item.getSiteId()) <= 100l);
+	private static final Predicate<Item> ITEM_PREDICATE = (item)-> !(item.getCondition().equalsIgnoreCase(ItemCondition.USED.name()));
 	
 	ItemSpecsNormalizer itemSpecsCapitalizer;
 	
@@ -40,7 +41,7 @@ public class ItemSpecsRule implements Rule, Serializable {
 			}
 			if((itemSpecs != null) && (itemSpecs.size() > 0)) {
 				if(item.getItemSpecifics().stream().noneMatch(MODEL_PREDICATE)) {
-					result.add(ErrorCode.ItemSpecsModelError);
+					result.add(ErrorCode.ItemSpecsColorError);
 				}
 			}
 		}
@@ -50,5 +51,4 @@ public class ItemSpecsRule implements Rule, Serializable {
 	private Object readResolve() {
 		return INSTANCE;
 	}
-	
 }

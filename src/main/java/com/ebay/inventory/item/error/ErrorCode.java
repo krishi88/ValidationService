@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 public enum ErrorCode {
 	
 	NullValueError("100","Value must be not null or not empty"),
-	TitleLengthError("105","Title length must be less than 85."),
+	TitleLengthError("105","Title length must be less than 50."),
 	ItemSpecsLengthError("110","Item specs length must be between 2 and 8."),
-	ItemSpecsModelError("115","Model number of item required");
+	ItemSpecsColorError("115","Color of item required");
 	
 	final String code;
 	final String errorMessage;
